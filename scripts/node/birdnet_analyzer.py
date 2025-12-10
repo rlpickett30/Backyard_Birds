@@ -1,75 +1,91 @@
 """
 birdnet_analyzer.py
 
-Wraps birdnetlib / BirdNET-Analyzer in a simple, reusable interface.
+Clean rewrite for Backyard_Birds.
+Wraps birdnetlib and produces stable, normalized detection dictionaries.
 
-Responsibilities:
-    - Initialize a single persistent Analyzer instance.
-    - Run analysis on a given WAV file.
-    - Return raw detection dictionaries (no node IDs, no UDP, no metadata).
-
-Public API:
-    analyze_wav(audio_path) -> list[dict]
+Output Format (guaranteed):
+{
+    "common_name": str,
+    "species_code": str,
+    "confidence": float,
+    "start_time": float,
+    "end_time": float
+}
 """
+
+from __future__ import annotations
 
 import pathlib
 import time
+from typing import List, Dict
 
 from birdnetlib import Recording
 from birdnetlib.analyzer import Analyzer
 
-# ---------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# BirdNET Configuration
+# ----------------------------------------------------------------------
 
-# These match your previous successful runs
 LAT = 37.2753
 LON = -107.8801
-WEEK = 48          # week-of-year for species list
-MIN_CONF = 0.25    # BirdNET confidence threshold (adjust later if desired)
+WEEK = 48
+MIN_CONF = 0.01          # Let manager enforce stricter confidence later
 
-# ---------------------------------------------------------------------
-# Analyzer initialization
-# ---------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# Initialize analyzer once (expensive)
+# ----------------------------------------------------------------------
 
-print("[analyzer] Initializing BirdNET Analyzer (this may take a moment)...")
+print("[analyzer] Initializing BirdNET model...")
 _ANALYZER = Analyzer()
-print("[analyzer] BirdNET Analyzer ready.")
+print("[analyzer] BirdNET model is ready.")
 
 
-# ---------------------------------------------------------------------
-# Public function
-# ---------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# Helper: Create a stable species_code from common name
+# ----------------------------------------------------------------------
 
-def analyze_wav(audio_path) -> list[dict]:
+def _make_species_code(common_name: str) -> str:
     """
-    Run BirdNET on the given WAV file and return a list of raw detections.
+    Convert common name into a consistent 6–8 character species code.
 
-    Parameters
-    ----------
-    audio_path : str | pathlib.Path
-        Path to the audio file to analyze.
-
-    Returns
-    -------
-    detections : list[dict]
-        Each detection has keys:
-            - common_name   : str
-            - species_code  : str
-            - confidence    : float
-            - start_time    : float (seconds)
-            - end_time      : float (seconds)
+    Examples:
+        Canada Goose     → cangoo
+        American Robin   → amrobin
+        Dark-eyed Junco  → darkey
     """
+    name = common_name.lower().replace("-", " ").replace("_", " ")
+    parts = name.split()
+
+    if len(parts) == 1:
+        # Single word name:
+        # “Mallard” → mallar
+        return parts[0][:6]
+
+    if len(parts) >= 2:
+        # Two-word name:
+        # “American Robin” → amrobin
+        return parts[0][:2] + parts[1][:4]
+
+    return common_name.lower().replace(" ", "")[:6]
+
+
+# ----------------------------------------------------------------------
+# Public API
+# ----------------------------------------------------------------------
+
+def analyze_wav(audio_path: pathlib.Path | str) -> List[Dict]:
+    """
+    Run BirdNET on the given WAV file and return normalized detection dicts.
+    """
+
     path = pathlib.Path(audio_path)
 
-    print(f"[analyzer] Requested analysis for: {path}")
+    print(f"[analyzer] Analyzing file: {path}")
 
     if not path.exists():
         print(f"[analyzer] ERROR: File does not exist: {path}")
         return []
-
-    file_size = path.stat().st_size
-    print(f"[analyzer] Input file size: {file_size} bytes")
 
     t0 = time.perf_counter()
 
@@ -82,45 +98,55 @@ def analyze_wav(audio_path) -> list[dict]:
             week_48=WEEK,
             min_conf=MIN_CONF,
         )
-
-        print("[analyzer] Recording object created. Starting analysis...")
         recording.analyze()
-        print("[analyzer] Raw detections from birdnetlib:",
-              len(recording.detections))
 
-    except Exception as e:
-        print("[analyzer] ERROR during analysis:", e)
+    except Exception as exc:
+        print("[analyzer] ERROR during analysis:", exc)
         return []
 
     t1 = time.perf_counter()
-    print(f"[analyzer] Analysis finished in {t1 - t0:.2f} s.")
+    print(f"[analyzer] BirdNET raw count: {len(recording.detections)}")
+    print(f"[analyzer] Analysis time: {t1 - t0:.2f} s")
 
-    # Normalize detections into a simple list of dicts
-    detections: list[dict] = []
+    # ------------------------------------------------------------------
+    # Normalize raw detections
+    # ------------------------------------------------------------------
+
+    normalized: List[Dict] = []
+
     for det in recording.detections:
+
+        common = det.get("common_name")
+        if not common:
+            print("[analyzer] WARNING: Missing common_name in:", det)
+            continue
+
+        # Build species_code safely
+        species_code = _make_species_code(common)
+
         try:
-            detections.append(
-                {
-                    "common_name": det["common_name"],
-                    "species_code": det["species_code"],
-                    "confidence": float(det["confidence"]),
-                    "start_time": float(det["start_time"]),
-                    "end_time": float(det["end_time"]),
-                }
-            )
-        except KeyError as missing:
-            print("[analyzer] WARNING: Missing key in detection:", missing)
-            print("           Raw detection:", det)
+            nd = {
+                "common_name": common,
+                "species_code": species_code,
+                "confidence": float(det.get("confidence", 0.0)),
+                "start_time": float(det.get("start_time", 0.0)),
+                "end_time": float(det.get("end_time", 0.0)),
+            }
+            normalized.append(nd)
 
-    # Optional: sort by confidence descending to make manager logic easier
-    detections.sort(key=lambda d: d["confidence"], reverse=True)
+        except Exception as exc:
+            print("[analyzer] WARNING: Failed to normalize detection:", exc)
+            print("          Raw detection:", det)
 
-    print("[analyzer] Normalized detections:", len(detections))
-    for d in detections:
+    normalized.sort(key=lambda d: d["confidence"], reverse=True)
+
+    print(f"[analyzer] Normalized detections: {len(normalized)}")
+    for d in normalized:
         print(
-            f"    - {d['common_name']} ({d['species_code']}) "
+            f"    - {d['common_name']} ({d['species_code']})  "
             f"conf={d['confidence']:.3f}  "
             f"{d['start_time']:.1f}s–{d['end_time']:.1f}s"
         )
 
-    return detections
+    return normalized
+
