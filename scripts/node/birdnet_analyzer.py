@@ -27,9 +27,9 @@ from birdnetlib.analyzer import Analyzer
 # BirdNET Configuration
 # ----------------------------------------------------------------------
 
-LAT = 37.2753
-LON = -107.8801
-WEEK = 48
+LAT = 26.28
+LON = -97.345
+WEEK = 49
 MIN_CONF = 0.01          # Let manager enforce stricter confidence later
 
 # ----------------------------------------------------------------------

@@ -1,0 +1,19 @@
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Local databases and runtime artifacts
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Optional: runtime directory (only if it is generated output)
+runtime/
