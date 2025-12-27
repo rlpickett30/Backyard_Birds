@@ -17,13 +17,13 @@ This README is written to be repeatable from a freshly flashed Raspberry Pi SD c
 ## Quick Start (Fresh SD Card)
 
 ### 1) Update the OS
-
+```bash
 sudo apt update
 sudo apt full-upgrade -y
 sudo reboot
-
+```
 ### 2) Install System Dependencies
-
+```bash
 sudo apt install -y \
   git \
   python3 \
@@ -32,34 +32,34 @@ sudo apt install -y \
   alsa-utils \
   usbutils \
   systemd \
-  build-essential
-sudo apt install -y ffmpeg
-
+  build-essential\
+  ffmpeg
+```
 ### 3) Create a Working Directory and Clone Repositories
 This setup expects both repositories in a single parent folder:
-
+```bash
 mkdir -p ~/birdstation
 cd ~/birdstation
 git clone https://github.com/kahst/BirdNET-Analyzer.git
 git clone https://github.com/rlpickett30/Backyard_Birds.git
-
+```
 ### 4) Create and Activate a Virtual Environment and Install Python Requirements
 Note: Run the pip install -r requirements.txt command from the correct directory that contains your requirements.txt.
 If your requirements.txt is in the Backyard_Birds repo, cd there before running it.
-
+```bash
 python3 -m venv ~/birdstation/venv
 source ~/birdstation/venv/bin/activate
 pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
-
+```
 
 ### 5) Run as a Systemd Service (Recommended)
 1) Create the Service File
-
+```bash
 sudo nano /etc/systemd/system/birdstation-dispatcher.service
-
+```
 Paste the following (update User= if your username is not node0):
-
+```bash
 [Unit]
 Description=BirdStation Dispatcher
 After=network-online.target
@@ -81,21 +81,21 @@ RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
-
-
+```
 2) Enable and Start the Service
-
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable birdstation-dispatcher.service
 sudo systemctl start birdstation-dispatcher.service
-
+```
 
 3) Verify Status and Follow Logs
-
+```bash
 systemctl status birdstation-dispatcher.service
-
+```
+```bash
 journalctl -u birdstation-dispatcher.service -f
-
+```
 
 
 What “Success” Looks Like
@@ -113,9 +113,9 @@ Troubleshooting
 Microphone / Audio Input
 List recording devices:
 
-bash
-Copy code
+```bash
 arecord -l
+```
 If BirdNET is running but detections never appear, confirm that:
 
 The correct input device is selected (if your code supports selection)
@@ -127,9 +127,9 @@ The recorded .wav chunk is non-empty and contains signal
 Service Will Not Start
 Check logs:
 
-bash
-Copy code
+```bash
 journalctl -u birdstation-dispatcher.service --no-pager -n 200
+```
 Common causes:
 
 Wrong User= in the systemd unit
@@ -153,8 +153,7 @@ This project is designed to be repeatable from scratch.
 If you change any paths, update the systemd service accordingly.
 
 After editing the systemd unit:
-
-bash
-Copy code
+```bash
 sudo systemctl daemon-reload
 sudo systemctl restart birdstation-dispatcher.service
+```
