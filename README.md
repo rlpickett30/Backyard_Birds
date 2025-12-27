@@ -104,8 +104,11 @@ sudo systemctl daemon-reload
 sudo systemctl enable birdstation-dispatcher.service
 sudo systemctl start birdstation-dispatcher.service
 ```
-
-3) Verify Status and Follow Logs
+3) Reboot System
+```bash
+sudo reboot
+```
+4) Verify Status and Follow Logs
 ```bash
 systemctl status birdstation-dispatcher.service
 ```
