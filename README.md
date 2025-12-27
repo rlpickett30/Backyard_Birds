@@ -110,8 +110,7 @@ systemctl status birdstation-dispatcher.service
 ```bash
 journalctl -u birdstation-dispatcher.service -f
 ```
-
-
+---
 What “Success” Looks Like
 When functioning correctly, you should see the dispatcher:
 
@@ -123,7 +122,9 @@ Building a detection event payload (including an event_id)
 
 Dispatching the event (for example, “UDP send successful”)
 
+---
 Troubleshooting
+
 Microphone / Audio Input
 List recording devices:
 
@@ -163,7 +164,7 @@ Copy code
   venv/
 Notes for Developers
 This project is designed to be repeatable from scratch.
-
+---
 If you change any paths, update the systemd service accordingly.
 
 After editing the systemd unit:
