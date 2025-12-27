@@ -62,6 +62,7 @@ If your requirements.txt is in the Backyard_Birds repo, cd there before running 
 ```bash
 python3 -m venv ~/birdstation/venv
 source ~/birdstation/venv/bin/activate
+cd ~/Backyard_Birds
 pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
