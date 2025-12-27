@@ -13,7 +13,20 @@ This README is written to be repeatable from a freshly flashed Raspberry Pi SD c
 - Network connectivity (Wi-Fi or Ethernet) if you want event dispatch off-node
 
 ---
-
+## SSH Quick Commands
+Remove a stale host key for an IP (the one you keep needing)
+```bash
+ssh-keygen -R 192.0.2.10
+```
+Remove a stale host key for a hostname
+```bash
+ssh-keygen -R node0.local
+```
+Connect (first-time prompt is normal)
+```bash
+ssh node0@192.0.2.10
+```
+---
 ## Quick Start (Fresh SD Card)
 
 ### 1) Update the OS
