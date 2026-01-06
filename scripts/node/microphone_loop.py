@@ -23,7 +23,7 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent
 RUNTIME_DIR = BASE_DIR / "runtime"
 AUDIO_PATH = RUNTIME_DIR / "mic_chunk.wav"
 
-ARECORD_DEVICE = "hw:Microphone,0"
+ARECORD_DEVICE = "plughw:CARD=Device,DEV=0"
 ARECORD_RATE = 48000
 ARECORD_CHANNELS = 1
 ARECORD_FORMAT = "S16_LE"
@@ -114,3 +114,4 @@ def run_live_loop(callback):
 
     except KeyboardInterrupt:
         print("\n[mic] Microphone loop stopped by user.")
+
