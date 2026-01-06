@@ -43,7 +43,7 @@ logger = logging.getLogger("birdstation.birdnet_manager")
 # ---------------------------------------------------------------------------
 
 # Minimum BirdNET confidence required to emit an event.
-MIN_EMIT_CONFIDENCE: float = 0.80
+MIN_EMIT_CONFIDENCE: float = 0.25
 
 # Maximum number of events to emit per audio chunk.
 # For example, 1 = top-1 species per chunk, 3 = top-3 species, etc.
@@ -215,3 +215,4 @@ def run_live_loop(event_callback: Callable[[Dict], None]) -> None:
         process_chunk(audio_path, event_callback)
 
     microphone_loop.run_live_loop(_on_audio_chunk)
+
