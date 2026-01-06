@@ -27,8 +27,8 @@ from birdnetlib.analyzer import Analyzer
 # BirdNET Configuration
 # ----------------------------------------------------------------------
 
-LAT = 26.28
-LON = -97.345
+LAT = 43.6107
+LON = -116.2146
 WEEK = 49
 MIN_CONF = 0.01          # Let manager enforce stricter confidence later
 
@@ -149,4 +149,5 @@ def analyze_wav(audio_path: pathlib.Path | str) -> List[Dict]:
         )
 
     return normalized
+
 
